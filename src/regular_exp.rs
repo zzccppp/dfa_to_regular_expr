@@ -70,7 +70,7 @@ impl ReExpr {
                     return;
                 }
 
-                if let Self::Connect((ll,rr)) = (*rhs).deref() {
+                if let Self::Connect((ll, rr)) = (*rhs).deref() {
                     if ll == lhs {
                         if let Self::Star(_) = rr.deref() {
                             *self = (**rhs).clone();
@@ -79,7 +79,7 @@ impl ReExpr {
                     return;
                 }
 
-                if let Self::Connect((ll,rr)) = (*lhs).deref() {
+                if let Self::Connect((ll, rr)) = (*lhs).deref() {
                     if ll == rhs {
                         if let Self::Star(_) = rr.deref() {
                             *self = (**lhs).clone();
@@ -87,7 +87,6 @@ impl ReExpr {
                     }
                     return;
                 }
-
             }
             ReExpr::Star(ex) => {
                 ex.simplify();
@@ -111,7 +110,44 @@ impl ReExpr {
                 lhs.simplify();
                 rhs.simplify();
 
-                
+                if let Self::Null = (*lhs).deref() {
+                    *self = Self::Null;
+                    return;
+                }
+
+                if let Self::Null = (*rhs).deref() {
+                    *self = Self::Null;
+                    return;
+                }
+
+                if let Self::Epsilon = (*lhs).deref() {
+                    *self = (**rhs).clone();
+                    return;
+                }
+
+                if let Self::Epsilon = (*rhs).deref() {
+                    *self = (**lhs).clone();
+                    return;
+                }
+
+                // (ep + r) r* = r*
+
+                if let Self::Or((ll, rr)) = (*lhs).deref() {
+                    if let Self::Star(r) = (*rhs).deref() {
+                        if ll.deref() == &Self::Epsilon {
+                            if rr == r {
+                                *self = (**rhs).clone();
+                            }
+                            return;
+                        }
+                        if rr.deref() == &Self::Epsilon {
+                            if ll == r {
+                                *self = (**rhs).clone();
+                            }
+                            return;
+                        }
+                    }
+                }
             }
             ReExpr::Null => {
                 return;

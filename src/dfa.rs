@@ -115,6 +115,7 @@ impl DFA {
                     i_k_k.connect(k_k_k);
                     i_k_k.connect(k_j_k);
                     i_j_k.or(i_k_k);
+                    i_j_k.simplify();
                     println!("{}",i_j_k.to_string());
                     buff.insert((i,j,k), i_j_k);
                 }
