@@ -1,7 +1,9 @@
+use std::ops::Deref;
+
 const EPSILON_CHAR: char = 'ε';
 const EMPTY_SET_CHAR: char = '∅';
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ReExpr {
     Epsilon,
     Value(String),
@@ -50,11 +52,70 @@ impl ReExpr {
                 return;
             }
             ReExpr::Or((lhs, rhs)) => {
-                //fixit: impl this
+                lhs.simplify();
+                rhs.simplify();
+
+                if lhs == rhs {
+                    *self = (**lhs).clone();
+                    return;
+                }
+
+                if **lhs == Self::Null {
+                    *self = (**rhs).clone();
+                    return;
+                }
+
+                if **rhs == Self::Null {
+                    *self = (**lhs).clone();
+                    return;
+                }
+
+                if let Self::Connect((ll,rr)) = (*rhs).deref() {
+                    if ll == lhs {
+                        if let Self::Star(_) = rr.deref() {
+                            *self = (**rhs).clone();
+                        }
+                    }
+                    return;
+                }
+
+                if let Self::Connect((ll,rr)) = (*lhs).deref() {
+                    if ll == rhs {
+                        if let Self::Star(_) = rr.deref() {
+                            *self = (**lhs).clone();
+                        }
+                    }
+                    return;
+                }
+
             }
-            ReExpr::Star(_) => {}
-            ReExpr::Connect(_) => {}
-            ReExpr::Null => {}
+            ReExpr::Star(ex) => {
+                ex.simplify();
+
+                if let Self::Epsilon = (*ex).deref() {
+                    *self = Self::Epsilon;
+                    return;
+                } else if let Self::Or((lhs, rhs)) = (*ex).deref() {
+                    //depends on the OR simplify
+                    if lhs.deref() == &Self::Epsilon {
+                        *self = Self::Star(Box::new(rhs.deref().clone()));
+                        return;
+                    }
+                    if rhs.deref() == &Self::Epsilon {
+                        *self = Self::Star(Box::new(lhs.deref().clone()));
+                        return;
+                    }
+                }
+            }
+            ReExpr::Connect((lhs, rhs)) => {
+                lhs.simplify();
+                rhs.simplify();
+
+                
+            }
+            ReExpr::Null => {
+                return;
+            }
         }
     }
 }

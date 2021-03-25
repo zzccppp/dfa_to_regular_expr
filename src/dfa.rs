@@ -74,11 +74,11 @@ impl DFA {
     }
 
     pub fn construct_regx(&self) {
-        let buff: HashMap<(i32, i32, i32), ReExpr> = HashMap::new();
+        let mut buff: HashMap<(i32, i32, i32), ReExpr> = HashMap::new();
         let node_count = self.nodes.len() as i32;
 
-        for i in 0..(node_count + 1) {
-            for j in 0..(node_count + 1) {
+        for i in 1..(node_count + 1) {
+            for j in 1..(node_count + 1) {
                 let node = self.nodes.get(&i).unwrap();
                 let cond = node.conditions_to(j);
                 let regx = if i == j {
@@ -99,14 +99,25 @@ impl DFA {
                     };
                     temp
                 };
-
-                println!("{}", regx.to_string())
+                println!("{}", regx.to_string());
+                buff.insert((i, j, 0), regx);
             }
         }
 
-        for k in 0..(node_count + 1) {
-            for i in 0..(node_count + 1) {
-                for j in 0..(node_count + 1) {}
+        for k in 1..(node_count + 1) {
+            for i in 1..(node_count + 1) {
+                for j in 1..(node_count + 1) {
+                    let mut i_j_k = buff.get(&(i,j,k-1)).unwrap().clone();
+                    let mut i_k_k = buff.get(&(i,k,k-1)).unwrap().clone(); 
+                    let mut k_k_k = buff.get(&(k,k,k-1)).unwrap().clone();
+                    let mut k_j_k = buff.get(&(k,j,k-1)).unwrap().clone();
+                    k_k_k.star();
+                    i_k_k.connect(k_k_k);
+                    i_k_k.connect(k_j_k);
+                    i_j_k.or(i_k_k);
+                    println!("{}",i_j_k.to_string());
+                    buff.insert((i,j,k), i_j_k);
+                }
             }
         }
     }

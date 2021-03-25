@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use dfa::DFA;
 use regular_exp::ReExpr;
 
@@ -21,6 +23,16 @@ fn main() {
     let b = ReExpr::Value("1".to_string());
     a.or(b);
     println!("{:?}", a);
+
+    let mut ep = Box::new(ReExpr::Epsilon);
+    let ex = &mut ep;
+
+    let mut ep_1 = Box::new(ReExpr::Epsilon);
+    let ex_1 = &mut ep_1;
+
+    if ex == ex_1 {
+        println!("------------")
+    }
 
     dfa.construct_regx();
 }
